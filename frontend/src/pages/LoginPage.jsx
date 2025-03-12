@@ -22,7 +22,7 @@ function LoginPage() {
       {/* Navbar */}
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center w-full max-w-7xl mt-10 rounded-lg">
         {/* Logo Section */}
-        <div className="text-2xl font-bold">MyLogo</div>
+        <div className="text-2xl font-bold">MyInsure</div>
 
         {/* Navigation Links */}
         <div className="flex space-x-6 text-gray-700 font-medium">
@@ -51,21 +51,23 @@ function LoginPage() {
         {/* Div1 */}
         <div className="w-full md:w-1/2 space-y-4">
           {/* First Div inside Div1 */}
-          <div className="bg-white p-8 rounded-lg shadow-md h-[270px] flex flex-col justify-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
+          <div className="h-[280px] bg-white p-8 rounded-lg shadow-md h-[270px] flex flex-col justify-center">
+            <h1 className="text-4xl md:text-5xl font-bold ml-10 text-gray-800 leading-tight">
               Top <span className="text-gray-500">Insurance</span> <br />
               Solutions
             </h1>
             <button
-              onClick={handlePatientLogin}
-              className="mt-6 px-4 py-3 w-full text-lg font-semibold bg-white text-black border border-black rounded-[20px] hover:bg-gray-100 hover:border-gray-800"
-            >
-              Login as Patient
-            </button>
+  onClick={handlePatientLogin}
+  className="mt-6 px-4 py-3 w-full text-lg font-semibold bg-white text-black border border-black rounded-[20px] transition-colors duration-300 hover:bg-black hover:text-white"
+>
+  Login as Patient
+</button>
+
+
           </div>
 
           {/* Second Div inside Div1 - Customer Image and Text */}
-          <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center h-[220px] justify-center">
+          <div className=" h-[230px] bg-white p-6 rounded-lg shadow-md flex flex-col items-center h-[220px] justify-center">
             <img
               src={customer}
               alt="Customer"
@@ -80,7 +82,7 @@ function LoginPage() {
 
         {/* Div2 with Background Image */}
         <div
-          className="h-[450px] w-[500px] rounded-lg shadow-md bg-cover bg-center flex-shrink-0"
+          className="h-[560px] w-[500px] rounded-lg shadow-md bg-cover bg-center flex-shrink-0"
           style={{ backgroundImage: `url(${family})` }}
         ></div>
       </div>
