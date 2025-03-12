@@ -1,4 +1,10 @@
-import { Controller, Get, Post, Patch, Param, Body, NotFoundException } from '@nestjs/common';
+import { 
+  Controller, Get, Post, Patch, Param, Body, NotFoundException, 
+  UseInterceptors, UploadedFile 
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { ClaimsService } from './claims.service';
 import { Claim } from './claims.schema';
 
@@ -6,19 +12,40 @@ import { Claim } from './claims.schema';
 export class ClaimsController {
   constructor(private readonly claimsService: ClaimsService) {}
 
-  // ✅ Endpoint to Submit a Claim
   @Post()
-  async submitClaim(@Body() claimData: Partial<Claim>): Promise<Claim> {
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads', // Save files in "uploads" folder
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          callback(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
+        },
+      }),
+    })
+  )
+  async submitClaim(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() claimData: any
+  ): Promise<Claim> {
+    console.log('Received claim data:', claimData);
+    console.log('Uploaded file:', file);
+
+    claimData.claimAmount = Number(claimData.amount);
+    delete claimData.amount;
+
+    if (file) {
+      claimData.fileUrl = `http://localhost:3000/uploads/${file.filename}`; // Set full URL
+    }
+
     return this.claimsService.submitClaim(claimData);
   }
 
-  // ✅ Endpoint to Get All Claims
   @Get()
   async getAllClaims(): Promise<Claim[]> {
     return this.claimsService.getAllClaims();
   }
 
-  // ✅ Endpoint to Update a Claim
   @Patch(':id')
   async updateClaim(
     @Param('id') id: string,
