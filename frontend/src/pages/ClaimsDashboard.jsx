@@ -53,15 +53,23 @@ function ClaimsDashboard() {
             <p className="text-gray-600"><strong>Amount:</strong> ${claim.claimAmount}</p>
             <p className="text-gray-600"><strong>Status:</strong> {claim.status}</p>
             <p className="text-gray-600"><strong>Submitted on:</strong> {claim.createdAt ? new Date(claim.createdAt).toLocaleDateString() : 'N/A'}</p>
-
-            {claim.fileUrl && (
+            
+            {claim.documentUrl && (
               <div className="mt-4">
                 <p className="text-gray-600"><strong>Attachment:</strong></p>
                 <img
-                  src={`http://localhost:3000${claim.fileUrl}`}
+                  src={claim.documentUrl}
                   alt="Claim file"
                   className="w-full h-48 object-cover rounded-lg mt-2"
                 />
+              </div>
+            )}
+            
+            {/* Insurer Comments Section */}
+            {claim.insurerComments && (
+              <div className="mt-4 p-4 bg-gray-200 rounded-lg">
+                <p className="text-gray-700"><strong>Insurer Comments:</strong></p>
+                <p className="text-gray-600">{claim.insurerComments}</p>
               </div>
             )}
           </div>

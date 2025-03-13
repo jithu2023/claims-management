@@ -9,12 +9,12 @@ function LoginPage() {
 
   const handlePatientLogin = () => {
     localStorage.setItem('user', 'patient'); // Mock login
-    navigate('/submit-claim'); // Redirect after login
+    navigate('/signup'); // Redirect after login
   };
 
   const handleInsurerLogin = () => {
     localStorage.setItem('user', 'insurer'); // Mock login
-    navigate('/manage-claims'); // Redirect after login
+    navigate('/manage'); // Redirect after login
   };
 
   return (
