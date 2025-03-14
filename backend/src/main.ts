@@ -11,7 +11,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:5173', // Local development
-      'https://claim-frontend-15p9ndxtl-jithus-projects.vercel.app' // Deployed frontend
+      'https://claim-frontend-two.vercel.app' // Deployed frontend
     ],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
