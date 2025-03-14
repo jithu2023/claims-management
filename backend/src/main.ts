@@ -9,10 +9,13 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: [
+      'http://localhost:5173', // Local development
+      'https://claim-frontend-15p9ndxtl-jithus-projects.vercel.app' // Deployed frontend
+    ],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'], // ✅ Added PATCH
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   });
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });
@@ -23,7 +26,9 @@ async function bootstrap() {
   }
   console.log('🔍 DEBUG - JWT_SECRET_KEY:', jwtSecret || 'Using default secret');
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`🚀 Server running on port ${port}`);
 }
 
 bootstrap();

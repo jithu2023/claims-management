@@ -13,8 +13,7 @@ function AuthPage() {
   });
 
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL || "
-https://claims-backend.vercel.app ";
+  const API_URL = import.meta.env.VITE_API_URL || "https://claims-backend.vercel.app";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
