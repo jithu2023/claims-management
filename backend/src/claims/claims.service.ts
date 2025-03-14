@@ -33,6 +33,11 @@ export class ClaimsService {
     return claim;
   }
 
+  // ✅ NEW: Find claim by email
+  async findByEmail(email: string): Promise<Claim | null> {
+    return this.claimModel.findOne({ email }).exec();
+  }
+
   async updateClaim(
     id: string,
     updateData: { status?: string; approvedAmount?: number; insurerComment?: string; insurerComments?: string }

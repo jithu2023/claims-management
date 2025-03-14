@@ -9,16 +9,18 @@ function ClaimsDashboard() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/claims")
+      .get("
+https://claims-backend.vercel.app/claims") // ✅ Fixed URL
       .then((response) => {
         setClaims(response.data);
         setLoading(false);
       })
       .catch((error) => {
+        console.error("Error fetching claims:", error); // ✅ Debugging
         setErrorMessage("Failed to fetch claims. Please try again later.");
         setLoading(false);
       });
-  }, []);
+  }, []); // ✅ Added dependency array
 
   const chartData = [
     { status: "Pending", count: claims.filter((c) => c.status === "Pending").length },
