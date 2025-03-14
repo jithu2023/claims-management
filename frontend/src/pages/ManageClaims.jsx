@@ -11,7 +11,8 @@ function ManageClaims() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/claims")
+      .get("
+https://claims-backend.vercel.app/claims") // Removed extra space
       .then((response) => {
         setClaims(response.data);
         setLoading(false);
@@ -42,7 +43,8 @@ function ManageClaims() {
     if (!selectedClaim || !insurerComment.trim()) return;
 
     axios
-      .patch(`http://localhost:3000/claims/${selectedClaim._id}`, {
+      .patch(`
+https://claims-backend.vercel.app/claims/${selectedClaim._id}`, { // Removed extra space
         insurerComments: insurerComment,
         status: selectedClaim.status,
       })

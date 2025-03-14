@@ -7,14 +7,8 @@ import {
   Body,
   NotFoundException,
   ConflictException,
-  UseInterceptors,
-  UploadedFile,
-  Req,
   BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { ClaimsService } from './claims.service';
 import { Claim } from './claims.schema';
 
@@ -43,22 +37,15 @@ export class ClaimsController {
     return this.claimsService.getClaimById(id);
   }
 
+  // ✅ NEW: Check if an email exists in claims
+  @Get('check-email/:email')
+  async checkEmail(@Param('email') email: string) {
+    const existingClaim = await this.claimsService.findByEmail(email);
+    return { exists: !!existingClaim };
+  }
+
   @Post()
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, file.fieldname + '-' + uniqueSuffix + extname(file.originalname));
-        },
-      }),
-    }),
-  )
-  async submitClaim(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() claimData: any
-  ): Promise<Claim> {
+  async submitClaim(@Body() claimData: any): Promise<Claim> {
     claimData.claimAmount = Number(claimData.claimAmount);
 
     if (isNaN(claimData.claimAmount) || claimData.claimAmount <= 0) {
@@ -69,14 +56,17 @@ export class ClaimsController {
       throw new BadRequestException('Email is required.');
     }
 
-    if (file) {
-      claimData.documentUrl = `http://localhost:3000/uploads/${file.filename}`;
+    if (!claimData.fileUrl || !/^https?:\/\//.test(claimData.fileUrl)) {
+      console.error("Invalid file URL received:", claimData.fileUrl);
+      throw new BadRequestException('Invalid file URL. Please upload a valid document.');
     }
+
+    console.log("Claim submission received with document URL:", claimData.fileUrl);
 
     return await this.claimsService.submitClaim(claimData);
   }
 
-  @Patch(':id') // ✅ No authentication required
+  @Patch(':id')
   async updateClaim(
     @Param('id') id: string,
     @Body() updateData: { status: string; approvedAmount?: number; insurerComments?: string }
