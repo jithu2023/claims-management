@@ -91,8 +91,7 @@ https://claims-backend.vercel.app/claims/check-email/${formData.email}`, // Remo
 
       // Send claim data to backend (without Multer handling)
       await axios.post(
-        "
-https://claims-backend.vercel.app/claims",
+        "https://claims-backend.vercel.app/claims",
         {
           name: formData.name,
           email: formData.email,

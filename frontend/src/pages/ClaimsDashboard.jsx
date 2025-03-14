@@ -9,8 +9,7 @@ function ClaimsDashboard() {
 
   useEffect(() => {
     axios
-      .get("
-https://claims-backend.vercel.app/claims") // ✅ Fixed URL
+      .get("https://claims-backend.vercel.app/claims") // ✅ Fixed URL
       .then((response) => {
         setClaims(response.data);
         setLoading(false);
