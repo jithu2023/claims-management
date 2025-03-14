@@ -12,7 +12,7 @@ async function bootstrap() {
     origin: 'http://localhost:5173',
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'], // ✅ Added PATCH
   });
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });

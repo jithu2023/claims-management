@@ -42,8 +42,8 @@ export class AuthService {
     // Generate JWT token
     const secretKey = this.configService.get<string>('JWT_SECRET_KEY') || 'defaultSecretKey';
     const token = this.jwtService.sign(
-      { userId: newUser._id, role: newUser.role },
-      { secret: secretKey, expiresIn: '1h' }
+      { userId: newUser._id, role: newUser.role }, // userId and role are included in the JWT
+      { secret: secretKey, expiresIn: '1h' } // Expires in 1 hour
     );
 
     return { token };
@@ -75,11 +75,11 @@ export class AuthService {
     // Generate JWT token
     const secretKey = this.configService.get<string>('JWT_SECRET_KEY') || 'defaultSecretKey';
     const token = this.jwtService.sign(
-      { userId: user._id, role: user.role },
-      { secret: secretKey, expiresIn: '1h' }
+      { userId: user._id, role: user.role }, // userId and role are included in the JWT
+      { secret: secretKey, expiresIn: '1h' }  // Expires in 1 hour
     );
 
-    console.log('Login successful:', { email, role: user.role });
+    console.log('Login successful:', { email, role: user.role, userId: user._id });  // Added userId in log
 
     return { token };
   }
