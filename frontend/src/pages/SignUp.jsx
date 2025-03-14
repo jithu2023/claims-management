@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {jwtDecode} from "jwt-decode"; 
 
 function AuthPage() {
   const [isSignup, setIsSignup] = useState(true);
@@ -46,11 +47,24 @@ function AuthPage() {
       console.log("✅ Response received:", response.data);
 
       if (!isSignup && response.data.token) {
+        // Store both the token and userId in localStorage
         localStorage.setItem("token", response.data.token);
+        if (response.data.userId) {
+          localStorage.setItem("userId", response.data.userId);
+          console.log(response.data.userId); // Save userId in localStorage
+        }
+
+        // Decode and log the JWT token
+        const decodedToken = jwtDecode(response.data.token);
+        console.log("Decoded JWT Token:", decodedToken); // Log decoded token
+
+        // Optionally store the role or any other details from the token
+        localStorage.setItem("role", decodedToken.role);
       }
 
       alert(response.data.message || (isSignup ? "Signup successful" : "Login successful"));
 
+      // Navigate based on role
       navigate(formattedRole === "User" ? "/submit-claim" : "/manage");
     } catch (error) {
       console.error("❌ Authentication error:", error.response || error);
@@ -146,3 +160,8 @@ function AuthPage() {
 }
 
 export default AuthPage;
+
+
+
+
+
