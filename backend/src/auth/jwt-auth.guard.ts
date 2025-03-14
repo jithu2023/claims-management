@@ -1,4 +1,3 @@
-// src/auth/jwt-auth.guard.ts
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
@@ -9,21 +8,33 @@ export class JwtAuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractTokenFromHeader(request);
-    if (!token) {
-      throw new UnauthorizedException('No token provided');
-    }
-    try {
-      const payload = this.jwtService.verify(token);
-      request.user = payload;
-    } catch {
-      throw new UnauthorizedException('Invalid token');
-    }
-    return true;
-  }
+    const authHeader = request.headers.authorization;
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing or invalid token');
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+      const decoded = this.jwtService.verify(token);
+
+      if (!decoded.userId && !decoded.id) {
+        throw new UnauthorizedException('Invalid token structure');
+      }
+
+      request.user = {
+        id: decoded.userId || decoded.id,
+        role: decoded.role,
+      };
+
+      return true;
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Token has expired, please login again');
+      }
+
+      throw new UnauthorizedException('Invalid or expired token');
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Claim, ClaimDocument } from './claims.schema';
@@ -7,29 +7,44 @@ import { Claim, ClaimDocument } from './claims.schema';
 export class ClaimsService {
   constructor(@InjectModel(Claim.name) private claimModel: Model<ClaimDocument>) {}
 
-  // ✅ Method to Submit a New Claim
   async submitClaim(claimData: Partial<Claim>): Promise<Claim> {
+    if (!claimData.email) {
+      throw new NotFoundException('Email is required.');
+    }
+
+    const existingClaim = await this.findClaimByEmail(claimData.email);
+    if (existingClaim) {
+      throw new ConflictException('A claim with this email already exists.');
+    }
+
     const newClaim = new this.claimModel({
       ...claimData,
-      status: 'Pending', // Default status
+      status: 'Pending',
       submissionDate: new Date(),
     });
+
     return newClaim.save();
   }
 
-  // ✅ Method to Get All Claims
   async getAllClaims(): Promise<Claim[]> {
     return this.claimModel.find().exec();
   }
 
-  // ✅ Method to Update Claim Status
-  async updateClaim(id: string, updateData: { status: string; approvedAmount?: number; insurerComments?: string }) {
-    const claim = await this.claimModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+  async getClaimsByUserId(userId: string): Promise<Claim[]> {
+    return this.claimModel.find({ userId }).exec();
+  }
 
-    if (!claim) {
-      throw new NotFoundException(`Claim with ID ${id} not found`);
+  async updateClaim(id: string, updateData: { status: string; approvedAmount?: number; insurerComments?: string }): Promise<Claim> {
+    const updatedClaim = await this.claimModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+
+    if (!updatedClaim) {
+      throw new NotFoundException(`Claim with ID ${id} not found.`);
     }
 
-    return claim;
+    return updatedClaim;
+  }
+
+  async findClaimByEmail(email: string): Promise<Claim | null> {
+    return this.claimModel.findOne({ email }).exec();
   }
 }

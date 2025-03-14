@@ -1,80 +1,98 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // ✅ Ensure this is correctly installed
 
 function ClaimsDashboard() {
   const [claims, setClaims] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3000/claims')
-      .then((response) => {
+    const fetchClaims = async () => {
+      let token = localStorage.getItem('token');
+
+      if (!token || token.trim() === '') {
+        console.error('❌ No token found in localStorage.');
+        setError('No token found. Please log in.');
+        setLoading(false);
+        return;
+      }
+
+      token = token.trim(); // Trim any extra spaces
+      console.log('🔍 Debug - Token from localStorage:', token);
+
+      try {
+        // Decode token to extract user ID
+        const decodedToken = jwtDecode(token);
+        console.log("🔍 Debug - Decoded Token:", decodedToken); // ✅ Log the full decoded token
+
+        const userId = decodedToken.id || decodedToken.userId || decodedToken._id; 
+
+        if (!userId) {
+          throw new Error('User ID missing in token.');
+        }
+
+        console.log('✅ Extracted User ID:', userId);
+
+        // ✅ Ensure API route matches backend
+        const response = await axios.get(`http://localhost:3000/api/claims/user/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('✅ Claims Data:', response.data);
         setClaims(response.data);
-      })
-      .catch((error) => {
-        console.error('Error fetching claims:', error);
-      });
+      } catch (error) {
+        console.error('❌ Error fetching claims:', error.response || error.message);
+
+        if (error.response?.status === 404) {
+          console.error('🔍 API Route Not Found - Check Backend Route.');
+          setError('No claims found. Please check your account.');
+        } else if (error.response?.status === 401) {
+          console.error('🔒 Unauthorized - Clearing token and redirecting to login.');
+          setError('Unauthorized access. Redirecting to login...');
+          setTimeout(() => {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+          }, 1500);
+        } else {
+          setError('Failed to fetch claims. Please check your authorization.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    setTimeout(fetchClaims, 500); // ⏳ Small delay to allow localStorage to update
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center">
-      {/* Navbar */}
-      <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center w-full max-w-5xl mt-10 rounded-lg">
-        {/* Logo Section */}
-        <div className="text-2xl font-bold">MyLogo</div>
-
-        {/* Navigation Links */}
-        <div className="flex space-x-6 text-gray-700 font-medium">
-          <a href="#" className="hover:text-blue-500">Home</a>
-          <a href="#" className="hover:text-blue-500">About</a>
-          <a href="#" className="hover:text-blue-500">Services</a>
-          <a href="#" className="hover:text-blue-500">Contact</a>
-        </div>
-
-        {/* Contact Now Button */}
-        <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 border border-black">
-          Contact Now
-        </button>
-      </nav>
-
-      {/* Dashboard Header */}
-      <header className="w-full max-w-5xl py-12 text-center">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6">
+      {error && <div className="text-red-600 text-lg font-semibold">{error}</div>}
+      <header className="w-full max-w-5xl py-8 text-center">
         <h2 className="text-4xl font-bold text-gray-800">My Claims</h2>
         <p className="text-gray-600 mt-2">Review and track your submitted claims below.</p>
       </header>
 
-      {/* Claims List */}
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
-        {claims.map((claim) => (
-          <div
-            key={claim._id}
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-          >
-            <p className="text-lg font-semibold text-gray-800 mb-2">{claim.name}</p>
-            <p className="text-gray-600"><strong>Amount:</strong> ${claim.claimAmount}</p>
-            <p className="text-gray-600"><strong>Status:</strong> {claim.status}</p>
-            <p className="text-gray-600"><strong>Submitted on:</strong> {claim.createdAt ? new Date(claim.createdAt).toLocaleDateString() : 'N/A'}</p>
-            
-            {claim.documentUrl && (
-              <div className="mt-4">
-                <p className="text-gray-600"><strong>Attachment:</strong></p>
-                <img
-                  src={claim.documentUrl}
-                  alt="Claim file"
-                  className="w-full h-48 object-cover rounded-lg mt-2"
-                />
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
+          {claims.length > 0 ? (
+            claims.map((claim) => (
+              <div key={claim._id} className="bg-white p-6 rounded-lg shadow-md">
+                <p className="text-lg font-semibold text-gray-800 mb-2">{claim.name || 'Unknown Name'}</p>
+                <p className="text-gray-600"><strong>Amount:</strong> ${claim.claimAmount}</p>
+                <p className="text-gray-600"><strong>Status:</strong> {claim.status}</p>
               </div>
-            )}
-            
-            {/* Insurer Comments Section */}
-            {claim.insurerComments && (
-              <div className="mt-4 p-4 bg-gray-200 rounded-lg">
-                <p className="text-gray-700"><strong>Insurer Comments:</strong></p>
-                <p className="text-gray-600">{claim.insurerComments}</p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+            ))
+          ) : (
+            <p className="text-gray-600 text-lg font-medium">No claims found.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

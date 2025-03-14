@@ -1,4 +1,3 @@
-// models/claims.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
@@ -9,7 +8,7 @@ export class Claim {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true })  // Ensuring email is unique
   email: string;
 
   @Prop({ required: true })
