@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import {jwtDecode} from "jwt-decode"; 
+import { jwtDecode } from "jwt-decode";
 
 function AuthPage() {
   const [isSignup, setIsSignup] = useState(true);
@@ -42,7 +42,11 @@ function AuthPage() {
 
       console.log("🔍 Sending request to:", `${API_URL}${endpoint}`, payload);
 
-      const response = await axios.post(`${API_URL}${endpoint}`, payload);
+      const response = await axios.post(`${API_URL}${endpoint}`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       console.log("✅ Response received:", response.data);
 
@@ -68,7 +72,10 @@ function AuthPage() {
       navigate(formattedRole === "User" ? "/submit-claim" : "/manage");
     } catch (error) {
       console.error("❌ Authentication error:", error.response || error);
-      alert(error.response?.data?.message || "Authentication failed. Please try again.");
+      alert(
+        error.response?.data?.message ||
+          "Authentication failed. Please check your credentials and try again."
+      );
     }
   };
 
@@ -78,10 +85,18 @@ function AuthPage() {
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center w-full max-w-7xl mt-10 rounded-lg">
         <div className="text-2xl font-bold text-black">MyInsure</div>
         <div className="flex space-x-6 text-gray-700 font-medium">
-          <a href="#" className="hover:text-blue-500">Home</a>
-          <a href="#" className="hover:text-blue-500">About</a>
-          <a href="#" className="hover:text-blue-500">Services</a>
-          <a href="#" className="hover:text-blue-500">Contact</a>
+          <a href="#" className="hover:text-blue-500">
+            Home
+          </a>
+          <a href="#" className="hover:text-blue-500">
+            About
+          </a>
+          <a href="#" className="hover:text-blue-500">
+            Services
+          </a>
+          <a href="#" className="hover:text-blue-500">
+            Contact
+          </a>
         </div>
       </nav>
 
@@ -114,6 +129,7 @@ function AuthPage() {
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={handleChange}
               required
+              autoComplete="email"
             />
 
             {/* Password Input */}
@@ -124,6 +140,7 @@ function AuthPage() {
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={handleChange}
               required
+              autoComplete="current-password"
             />
 
             {/* Insurer ID (Only for Insurer Signup) */}
@@ -160,8 +177,3 @@ function AuthPage() {
 }
 
 export default AuthPage;
-
-
-
-
-
