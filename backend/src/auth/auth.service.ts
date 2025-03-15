@@ -11,24 +11,32 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
+  /**
+   * Sign up a new user.
+   * @param email - The user's email.
+   * @param password - The user's password.
+   * @param role - The user's role (e.g., 'User' or 'Insurer').
+   * @param insurerId - The insurer ID (required if the role is 'Insurer').
+   * @returns {Promise<{ token: string }>} - A JWT token for the new user.
+   */
   async signup(email: string, password: string, role: string, insurerId?: string): Promise<{ token: string }> {
     email = email.trim(); // Ensure consistent formatting
 
-    // 🔍 Debugging: Check if email already exists
-    const existingUser = await this.userModel.findOne({ email });
+    // Check if the email already exists
+    const existingUser = await this.userModel.findOne({ email }).exec();
     if (existingUser) {
       console.error('Signup failed: Email already exists', email);
       throw new ConflictException('User with this email already exists.');
     }
 
-    // Hash password
+    // Hash the password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create new user
+    // Create a new user
     const newUser = new this.userModel({
       email,
       password: hashedPassword,
@@ -39,27 +47,31 @@ export class AuthService {
     await newUser.save();
     console.log('User signed up successfully:', { email, role });
 
-    // Generate JWT token
-    const secretKey = this.configService.get<string>('JWT_SECRET_KEY') || 'defaultSecretKey';
-    const token = this.jwtService.sign(
-      { userId: newUser._id, role: newUser.role }, // userId and role are included in the JWT
-      { secret: secretKey, expiresIn: '1h' } // Expires in 1 hour
-    );
+    // Generate a JWT token
+    const payload = { userId: newUser._id.toString(), role: newUser.role }; // Cast _id to string
+    const token = this.generateToken(payload);
 
     return { token };
   }
 
+  /**
+   * Log in an existing user.
+   * @param email - The user's email.
+   * @param password - The user's password.
+   * @param insurerId - The insurer ID (required if the role is 'Insurer').
+   * @returns {Promise<{ token: string }>} - A JWT token for the logged-in user.
+   */
   async login(email: string, password: string, insurerId?: string): Promise<{ token: string }> {
     email = email.trim();
 
-    // Find user by email
-    const user = await this.userModel.findOne({ email });
+    // Find the user by email
+    const user = await this.userModel.findOne({ email }).exec();
     if (!user) {
       console.error('Login failed: User not found', email);
       throw new UnauthorizedException('Invalid email or password.');
     }
 
-    // Ensure Insurer has valid Insurer ID
+    // Ensure Insurer has a valid Insurer ID
     if (user.role === 'Insurer' && (!insurerId || user.insurerId !== insurerId)) {
       console.error('Login failed: Invalid Insurer ID', { email, expected: user.insurerId, received: insurerId });
       throw new UnauthorizedException('Invalid Insurer ID.');
@@ -72,15 +84,22 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
-    // Generate JWT token
-    const secretKey = this.configService.get<string>('JWT_SECRET_KEY') || 'defaultSecretKey';
-    const token = this.jwtService.sign(
-      { userId: user._id, role: user.role }, // userId and role are included in the JWT
-      { secret: secretKey, expiresIn: '1h' }  // Expires in 1 hour
-    );
+    // Generate a JWT token
+    const payload = { userId: user._id.toString(), role: user.role }; // Cast _id to string
+    const token = this.generateToken(payload);
 
-    console.log('Login successful:', { email, role: user.role, userId: user._id });  // Added userId in log
+    console.log('Login successful:', { email, role: user.role, userId: user._id });
 
     return { token };
+  }
+
+  /**
+   * Generate a JWT token.
+   * @param payload - The payload to include in the token.
+   * @returns {string} - The generated JWT token.
+   */
+  private generateToken(payload: { userId: string; role: string }): string {
+    const secretKey = this.configService.get<string>('JWT_SECRET_KEY') || 'defaultSecretKey';
+    return this.jwtService.sign(payload, { secret: secretKey, expiresIn: '1h' });
   }
 }
