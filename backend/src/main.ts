@@ -17,7 +17,7 @@ async function bootstrap() {
     origin: (origin, callback) => {
       logger.log(`🔍 CORS request from: ${origin}`);
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
+        callback(null, origin);
       } else {
         logger.warn(`⛔ CORS blocked: ${origin}`);
         callback(new Error('Not allowed by CORS'));
@@ -29,33 +29,17 @@ async function bootstrap() {
   });
 
   // 🔥 Static Assets (Ensure correct path)
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });
-
-  // 🚀 Preflight Request Handler
-  app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    logger.log(`📡 Preflight request received from: ${origin}`);
-
-    if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-      if (req.method === 'OPTIONS') {
-        return res.sendStatus(204);
-      }
-    } else {
-      logger.warn(`⛔ Preflight blocked for: ${origin}`);
-    }
-
-    next();
-  });
+  const uploadsPath = join(__dirname, '..', 'uploads');
+  app.useStaticAssets(uploadsPath, { prefix: '/uploads' });
+  logger.log(`📂 Serving static files from: ${uploadsPath}`);
 
   // 🔒 JWT Secret Check
   const jwtSecret = configService.get<string>('JWT_SECRET_KEY');
   if (!jwtSecret) {
-    logger.warn('⚠️ Warning: JWT_SECRET_KEY is not set! Using fallback secret.');
+    logger.error('❌ Error: JWT_SECRET_KEY is not set!');
+    process.exit(1); // Exit the application if JWT_SECRET_KEY is not set
+  } else {
+    logger.log(`🔑 JWT Secret Key loaded successfully`);
   }
 
   // 🚀 Start the server

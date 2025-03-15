@@ -50,7 +50,7 @@ function AuthPage() {
 
       console.log("✅ Response received:", response.data);
 
-      if (!isSignup && response.data.token) {
+      if ( response.data.token) {
         // Store both the token and userId in localStorage
         localStorage.setItem("token", response.data.token);
         if (response.data.userId) {
