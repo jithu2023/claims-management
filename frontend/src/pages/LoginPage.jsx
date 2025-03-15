@@ -14,7 +14,7 @@ function LoginPage() {
 
   const handleInsurerLogin = () => {
     localStorage.setItem('user', 'insurer'); // Mock login
-    navigate('/manage'); // Redirect after login
+    navigate('/signup'); // Redirect after login
   };
 
   return (
